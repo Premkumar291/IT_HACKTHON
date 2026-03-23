@@ -1,17 +1,15 @@
-cd C:\Users\bhara\OneDrive\Desktop\Hackthon_platform
-Write-Host "Creating client directory..."
-npx -y create-vite@latest client --template react-ts
+# Fix setup.ps1 - rewrite to be portable
+Write-Host "Setting up Hackathon Platform..." -ForegroundColor Cyan
 
-cd client
-Write-Host "Installing standard client dependencies..."
+# Install server dependencies
+Write-Host "`nInstalling server dependencies..." -ForegroundColor Yellow
+Set-Location -Path "$PSScriptRoot/server"
 npm install
 
-Write-Host "Installing Tailwind and other UI frameworks..."
-npm install @tailwindcss/vite tailwindcss lucide-react framer-motion react-hook-form react-router-dom axios clsx tailwind-merge
+# Install client dependencies
+Write-Host "`nInstalling client dependencies..." -ForegroundColor Yellow
+Set-Location -Path "$PSScriptRoot/client"
+npm install
 
-cd ..\server
-Write-Host "Installing backend dependencies..."
-npm init -y
-npm install express cors dotenv googleapis
-
-Write-Host "Setup complete!"
+Write-Host "`nSetup complete!" -ForegroundColor Green
+Write-Host "Run 'npm run dev' in both /server and /client to start." -ForegroundColor Cyan

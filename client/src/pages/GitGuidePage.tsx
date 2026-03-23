@@ -1,5 +1,6 @@
 import { Download, Terminal, GitBranch, Github as GithubIcon, ShieldCheck, Cpu, Code } from 'lucide-react';
 import { motion } from 'framer-motion';
+import gitGuidePdf from '../assets/git-guide.pdf';
 
 const GitGuidePage = () => {
     return (
@@ -37,7 +38,7 @@ const GitGuidePage = () => {
                         animate={{ opacity: 1, x: 0 }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        href="/src/assets/git-guide.pdf"
+                        href={gitGuidePdf}
                         download
                         className="btn-primary"
                     >

@@ -53,11 +53,11 @@ export const registerTeam = async (formData: RegisterTeamPayload | FormData) => 
 const ADMIN_KEY_STORAGE = 'hackathon_admin_key';
 
 export function setAdminKey(key: string) {
-    localStorage.setItem(ADMIN_KEY_STORAGE, key);
+    sessionStorage.setItem(ADMIN_KEY_STORAGE, key);
 }
 
 export function getAdminKey() {
-    return localStorage.getItem(ADMIN_KEY_STORAGE) || '';
+    return sessionStorage.getItem(ADMIN_KEY_STORAGE) || '';
 }
 
 function adminHeaders() {

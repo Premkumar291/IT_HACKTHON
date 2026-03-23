@@ -29,6 +29,13 @@ function App() {
             <Route path="/git-guide" element={<GitGuidePage />} />
             <Route path="/register" element={<RegisterFormPage />} />
             <Route path="/admin" element={<AdminPage />} />
+            <Route path="*" element={
+              <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
+                <h1 className="text-7xl font-black text-white font-outfit mb-4">404</h1>
+                <p className="text-neutral-500 text-lg mb-8">This page doesn't exist.</p>
+                <a href="/" className="btn-primary">Go Home</a>
+              </div>
+            } />
           </Routes>
         </Suspense>
       </main>

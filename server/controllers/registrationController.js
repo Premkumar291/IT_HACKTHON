@@ -34,6 +34,18 @@ exports.registerTeam = async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
+        // Email format validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ error: 'Invalid email format' });
+        }
+
+        // Duplicate registration check
+        const existing = await Registration.findOne({ $or: [{ email }, { phone }] }).lean();
+        if (existing) {
+            return res.status(409).json({ error: 'A registration with this email or phone already exists' });
+        }
+
         let parsedMembers = [];
         if (members) {
             try {
@@ -46,7 +58,7 @@ exports.registerTeam = async (req, res) => {
             return res.status(400).json({ error: 'Invalid members format' });
         }
         if (parsedMembers.length > 4) {
-            return res.status(400).json({ error: 'Team strength must be 5 including leader' });
+            return res.status(400).json({ error: 'Team members exceed the maximum limit of 4 members' });
         }
         for (const m of parsedMembers) {
             if (!m?.name || !m?.email || !m?.phone) {

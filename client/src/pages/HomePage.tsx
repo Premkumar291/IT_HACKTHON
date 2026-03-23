@@ -1,19 +1,10 @@
-import { motion, useMotionValue } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Sparkles, Code, Cpu } from 'lucide-react';
 
 const HomePage = () => {
-    const mouseX = useMotionValue(0);
-    const mouseY = useMotionValue(0);
-
-    const handleMouseMove = (e: React.MouseEvent) => {
-        const { clientX, clientY } = e;
-        mouseX.set(clientX);
-        mouseY.set(clientY);
-    };
-
     return (
-        <div onMouseMove={handleMouseMove} className="min-h-screen bg-black overflow-hidden selection:bg-neutral-800">
+        <div className="min-h-screen bg-black overflow-hidden selection:bg-neutral-800">
             {/* Background Grain */}
             <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 

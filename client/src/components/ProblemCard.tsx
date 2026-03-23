@@ -1,6 +1,7 @@
 import { Target } from 'lucide-react';
+import type { Problem } from '../data/problems';
 
-const ProblemCard = ({ problem }: { problem: any }) => {
+const ProblemCard = ({ problem }: { problem: Problem }) => {
     return (
         <div className="p-8 rounded-2xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-all group h-full flex flex-col hover:bg-neutral-900/80">
             <div className="flex items-center justify-between mb-8">

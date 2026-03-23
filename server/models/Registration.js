@@ -37,7 +37,6 @@ RegistrationSchema.index({
   fullName: 'text',
   email: 'text',
   phone: 'text',
-  college: 'text',
   preferredProblem: 'text',
 });
 
