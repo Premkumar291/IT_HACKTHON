@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const SERVER_ORIGIN = 'http://localhost:5000';
+export const SERVER_ORIGIN = import.meta.env.VITE_SERVER_ORIGIN || 'http://localhost:5000';
 
 export type UploadedFileMeta = {
     originalName: string;
@@ -31,7 +31,7 @@ export type Registration = {
 export type RegisterTeamPayload = Omit<Registration, '_id' | 'createdAt' | 'updatedAt'>;
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
     headers: {
         'Content-Type': 'application/json',
     },
