@@ -1,0 +1,15 @@
+.env
+**/.env
+
+node_modules/
+**/node_modules/
+
+server/uploads/
+
+dist/
+build/
+.vite/
+
+.DS_Store
+Thumbs.db
+
