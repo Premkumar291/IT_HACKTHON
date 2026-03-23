@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Rocket, ChevronRight } from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import HackTheLimitzLogo from './HackTheLimitzLogo';
 
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -25,11 +26,8 @@ const Navbar = () => {
             scrolled ? 'py-4 bg-black/80 backdrop-blur-md border-b border-neutral-800' : 'py-6 bg-transparent'
         }`}>
             <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-                <Link to="/" className="flex items-center gap-2 group">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-black group-hover:scale-105 transition-transform">
-                        <Rocket className="w-5 h-5" />
-                    </div>
-                    <span className="text-xl font-bold tracking-tight text-white uppercase font-outfit">IT_27</span>
+                <Link to="/" className="flex items-center group">
+                    <HackTheLimitzLogo className="w-40" />
                 </Link>
 
                 {/* Desktop Nav */}

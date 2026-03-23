@@ -3,17 +3,11 @@ const multer = require('multer');
 function fileFilter(req, file, cb) {
   if (file.fieldname === 'pptFile') {
     const ok =
-      file.mimetype === 'application/pdf' ||
-      file.originalname.toLowerCase().endsWith('.pdf');
-    return cb(ok ? null : new Error('Invalid PPT PDF file type'), ok);
-  }
-
-  if (file.fieldname === 'paymentScreenshot') {
-    const ok =
-      file.mimetype.startsWith('image/') ||
-      file.mimetype === 'application/pdf' ||
-      file.originalname.toLowerCase().endsWith('.pdf');
-    return cb(ok ? null : new Error('Invalid payment screenshot type'), ok);
+      file.mimetype === 'application/vnd.ms-powerpoint' ||
+      file.mimetype === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      file.originalname.toLowerCase().endsWith('.ppt') ||
+      file.originalname.toLowerCase().endsWith('.pptx');
+    return cb(ok ? null : new Error('Only PPT/PPTX files are accepted'), ok);
   }
 
   return cb(null, true);

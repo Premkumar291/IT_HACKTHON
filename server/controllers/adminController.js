@@ -1,9 +1,6 @@
 const mongoose = require('mongoose');
 const Registration = require('../models/Registration');
 
-function escapeRegex(input) {
-  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 exports.getRegistrationStats = async (req, res) => {
   try {
@@ -93,12 +90,18 @@ exports.updateScores = async (req, res) => {
       return res.status(400).json({ error: 'Invalid id' });
     }
 
+    const fScore = Number(facultyScore || 0);
+    const gScore = Number(guestScore || 0);
+    if (isNaN(fScore) || fScore < 0 || fScore > 20 || isNaN(gScore) || gScore < 0 || gScore > 20) {
+      return res.status(400).json({ error: 'Scores must be between 0 and 20' });
+    }
+
     const updated = await Registration.findByIdAndUpdate(
       id,
       { 
         $set: { 
-          facultyScore: Number(facultyScore || 0), 
-          guestScore: Number(guestScore || 0) 
+          facultyScore: fScore, 
+          guestScore: gScore 
         } 
       },
       { new: true }
