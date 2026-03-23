@@ -26,7 +26,8 @@ const RegistrationSchema = new mongoose.Schema(
       fileId: { type: String, default: 'N/A', index: true },
     },
 
-    // no status field (approved/pending/rejected removed)
+    facultyScore: { type: Number, default: 0 },
+    guestScore: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

@@ -7,8 +7,12 @@ function escapeRegex(input) {
 
 exports.getRegistrationStats = async (req, res) => {
   try {
-    const total = await Registration.countDocuments({});
-    return res.json({ total });
+    const [total, facultyReviewed, guestReviewed] = await Promise.all([
+      Registration.countDocuments({}),
+      Registration.countDocuments({ facultyScore: { $gt: 0 } }),
+      Registration.countDocuments({ guestScore: { $gt: 0 } }),
+    ]);
+    return res.json({ total, facultyReviewed, guestReviewed });
   } catch (err) {
     console.error('Admin stats error:', err);
     return res.status(500).json({ error: 'Failed to fetch stats' });
@@ -77,6 +81,37 @@ exports.deleteRegistration = async (req, res) => {
   } catch (err) {
     console.error('Admin delete registration error:', err);
     return res.status(500).json({ error: 'Failed to delete registration' });
+  }
+};
+
+exports.updateScores = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { facultyScore, guestScore } = req.body;
+    
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ error: 'Invalid id' });
+    }
+
+    const updated = await Registration.findByIdAndUpdate(
+      id,
+      { 
+        $set: { 
+          facultyScore: Number(facultyScore || 0), 
+          guestScore: Number(guestScore || 0) 
+        } 
+      },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    return res.json({ ok: true, registration: updated });
+  } catch (err) {
+    console.error('Admin update scores error:', err);
+    return res.status(500).json({ error: 'Failed to update scores' });
   }
 };
 

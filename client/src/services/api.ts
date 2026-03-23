@@ -26,6 +26,8 @@ export type Registration = {
     members: TeamMember[];
     preferredProblem: string;
     pptFile?: UploadedFileMeta;
+    facultyScore?: number;
+    guestScore?: number;
 };
 
 export type RegisterTeamPayload = Omit<Registration, '_id' | 'createdAt' | 'updatedAt'>;
@@ -67,7 +69,7 @@ function adminHeaders() {
 
 export async function adminGetStats() {
     const response = await api.get('/admin/stats', { headers: adminHeaders() });
-    return response.data as { total: number };
+    return response.data as { total: number; facultyReviewed: number; guestReviewed: number };
 }
 
 export async function adminListRegistrations(params: { page?: number; limit?: number; q?: string }) {
@@ -83,6 +85,11 @@ export async function adminListRegistrations(params: { page?: number; limit?: nu
 
 export async function adminDeleteRegistration(id: string) {
     const response = await api.delete(`/admin/registrations/${id}`, { headers: adminHeaders() });
+    return response.data as { ok: boolean };
+}
+
+export async function adminUpdateScores(id: string, scores: { facultyScore: number; guestScore: number }) {
+    const response = await api.patch(`/admin/registrations/${id}/scores`, scores, { headers: adminHeaders() });
     return response.data as { ok: boolean };
 }
 

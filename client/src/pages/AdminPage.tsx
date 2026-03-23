@@ -6,13 +6,12 @@ import {
   adminListRegistrations,
   getAdminKey,
   setAdminKey,
-  SERVER_ORIGIN,
   type Registration,
 } from '../services/api';
-import { AlertCircle, Search, Shield, Trash2, RefreshCcw, LogOut, Download, Users, Briefcase, Calendar, ChevronLeft, ChevronRight, LayoutGrid, Phone, Mail } from 'lucide-react';
+import { AlertCircle, Search, Shield, Trash2, RefreshCcw, LogOut, Users, Briefcase, ChevronLeft, ChevronRight, LayoutGrid, Phone, Mail, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type Stats = { total: number };
+type Stats = { total: number; facultyReviewed: number; guestReviewed: number };
 
 function getAxiosMessage(err: unknown, fallback: string) {
   const e = err as AxiosError<{ error?: unknown }> | undefined;
@@ -43,11 +42,7 @@ function StatCard({ label, value, icon: Icon, tone }: { label: string; value: nu
   );
 }
 
-function fileUrl(meta?: { fileId?: string }) {
-  const id = meta?.fileId;
-  if (!id || typeof id !== 'string' || id === 'N/A') return '';
-  return `${SERVER_ORIGIN}/api/files/${id}`;
-}
+
 
 export default function AdminPage() {
   const [adminKeyInput, setAdminKeyInput] = useState(() => getAdminKey());
@@ -61,6 +56,8 @@ export default function AdminPage() {
   const [debouncedQ, setDebouncedQ] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scoring, setScoring] = useState<{ id: string; type: 'faculty' | 'guest' } | null>(null);
+  const [scoreInput, setScoreInput] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -237,11 +234,10 @@ export default function AdminPage() {
             )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-20">
             <StatCard label="Total Teams" value={stats?.total ?? 0} icon={Briefcase} tone="blue" />
-            <StatCard label="Total Members" value={(stats?.total ?? 0) * 3} icon={Users} tone="indigo" />
-            <StatCard label="Pending Review" value={Math.floor((stats?.total ?? 0) / 2)} icon={Calendar} tone="emerald" />
-            <StatCard label="Active Status" value={100} icon={Shield} tone="blue" />
+            <StatCard label="Faculty Reviewed" value={stats?.facultyReviewed ?? 0} icon={Users} tone="indigo" />
+            <StatCard label="Guest Reviewed" value={stats?.guestReviewed ?? 0} icon={Shield} tone="emerald" />
         </div>
 
         <div className="rounded-[40px] border border-neutral-800 bg-neutral-950 shadow-2xl overflow-hidden">
@@ -284,7 +280,7 @@ export default function AdminPage() {
                             <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Leader</th>
                             <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Personnel</th>
                             <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Project Focus</th>
-                            <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Files</th>
+                            <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Review Scores (/20)</th>
                             <th className="px-10 py-8 text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 italic">Actions</th>
                         </tr>
                     </thead>
@@ -316,33 +312,168 @@ export default function AdminPage() {
                                     <div className="text-base font-black font-outfit text-white tracking-tight uppercase italic mb-2">{r.preferredProblem}</div>
                                     <div className="text-neutral-600 text-[9px] font-black uppercase tracking-widest italic">Problem Statement Track</div>
                                 </td>
-                                <td className="px-10 py-10 align-top">
-                                    {fileUrl(r.pptFile) ? (
-                                        <a
-                                            href={fileUrl(r.pptFile)}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-900 border border-neutral-800 text-white font-bold uppercase tracking-widest text-[9px] transition-all hover:bg-white hover:text-black mb-3"
-                                        >
-                                            <Download className="w-4 h-4" />
-                                            Download PPT
-                                        </a>
-                                    ) : (
-                                        <div className="text-neutral-800 font-black uppercase tracking-[0.2em] text-[9px]">NO PAYLOAD</div>
-                                    )}
-                                    <div className="text-neutral-600 text-[9px] font-black uppercase tracking-widest mt-1 italic">
-                                        {new Date(r.createdAt).toDateString()}
+                                <td className="px-10 py-10 align-top min-w-[240px]">
+                                    <div className="space-y-4">
+                                        {/* Faculty Score Section */}
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest italic mb-1">Faculty</span>
+                                                <span className="text-sm font-bold text-white italic">{r.facultyScore || 0}<span className="text-neutral-600 text-[10px] ml-1">/ 20</span></span>
+                                            </div>
+                                            
+                                            {scoring?.id === r._id && scoring?.type === 'faculty' ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        autoFocus
+                                                        type="number"
+                                                        min="0"
+                                                        max="20"
+                                                        value={scoreInput}
+                                                        onChange={(e) => setScoreInput(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Escape') setScoring(null);
+                                                            if (e.key === 'Enter') {
+                                                                const val = Number(scoreInput);
+                                                                if (isNaN(val) || val < 0 || val > 20) {
+                                                                    alert('Mark invalid. Please enter a score between 0 and 20.');
+                                                                    return;
+                                                                }
+                                                                import('../services/api').then(api => {
+                                                                    api.adminUpdateScores(r._id, { facultyScore: val, guestScore: r.guestScore || 0 })
+                                                                       .then(() => {
+                                                                           setScoring(null);
+                                                                           void refresh();
+                                                                       });
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="w-16 bg-neutral-900 border border-blue-500/50 rounded-lg px-2 py-1.5 text-white font-mono text-xs outline-none"
+                                                    />
+                                                    <button 
+                                                        onClick={() => {
+                                                            const val = Number(scoreInput);
+                                                            if (isNaN(val) || val < 0 || val > 20) {
+                                                                alert('Mark invalid. Please enter a score between 0 and 20.');
+                                                                return;
+                                                            }
+                                                            import('../services/api').then(api => {
+                                                                api.adminUpdateScores(r._id, { facultyScore: val, guestScore: r.guestScore || 0 })
+                                                                   .then(() => {
+                                                                       setScoring(null);
+                                                                       void refresh();
+                                                                   });
+                                                            });
+                                                        }}
+                                                        className="p-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 transition-all"
+                                                    >
+                                                        <Check className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setScoring(null)}
+                                                        className="p-1.5 rounded-md bg-neutral-800 text-neutral-400 hover:bg-neutral-700 transition-all"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => {
+                                                        setScoring({ id: r._id, type: 'faculty' });
+                                                        setScoreInput(String(r.facultyScore || 0));
+                                                    }}
+                                                    className="px-4 py-2 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg active:scale-95"
+                                                >
+                                                    Score
+                                                </button>
+                                            )}
+                                        </div>
+
+                                        {/* Guest Score Section */}
+                                        <div className="flex items-center justify-between gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-black text-neutral-500 uppercase tracking-widest italic mb-1">Guest</span>
+                                                <span className="text-sm font-bold text-white italic">{r.guestScore || 0}<span className="text-neutral-600 text-[10px] ml-1">/ 20</span></span>
+                                            </div>
+
+                                            {scoring?.id === r._id && scoring?.type === 'guest' ? (
+                                                <div className="flex items-center gap-2">
+                                                    <input 
+                                                        autoFocus
+                                                        type="number"
+                                                        min="0"
+                                                        max="20"
+                                                        value={scoreInput}
+                                                        onChange={(e) => setScoreInput(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Escape') setScoring(null);
+                                                            if (e.key === 'Enter') {
+                                                                const val = Number(scoreInput);
+                                                                if (isNaN(val) || val < 0 || val > 20) {
+                                                                    alert('Mark invalid. Please enter a score between 0 and 20.');
+                                                                    return;
+                                                                }
+                                                                import('../services/api').then(api => {
+                                                                    api.adminUpdateScores(r._id, { facultyScore: r.facultyScore || 0, guestScore: val })
+                                                                       .then(() => {
+                                                                           setScoring(null);
+                                                                           void refresh();
+                                                                       });
+                                                                });
+                                                            }
+                                                        }}
+                                                        className="w-16 bg-neutral-900 border border-emerald-500/50 rounded-lg px-2 py-1.5 text-white font-mono text-xs outline-none"
+                                                    />
+                                                    <button 
+                                                        onClick={() => {
+                                                            const val = Number(scoreInput);
+                                                            if (isNaN(val) || val < 0 || val > 20) {
+                                                                alert('Mark invalid. Please enter a score between 0 and 20.');
+                                                                return;
+                                                            }
+                                                            import('../services/api').then(api => {
+                                                                api.adminUpdateScores(r._id, { facultyScore: r.facultyScore || 0, guestScore: val })
+                                                                   .then(() => {
+                                                                       setScoring(null);
+                                                                       void refresh();
+                                                                   });
+                                                            });
+                                                        }}
+                                                        className="p-1.5 rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-all"
+                                                    >
+                                                        <Check className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => setScoring(null)}
+                                                        className="p-1.5 rounded-md bg-neutral-800 text-neutral-400 hover:bg-neutral-700 transition-all"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => {
+                                                        setScoring({ id: r._id, type: 'guest' });
+                                                        setScoreInput(String(r.guestScore || 0));
+                                                    }}
+                                                    className="px-4 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg active:scale-95"
+                                                >
+                                                    Score
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="px-10 py-10 align-top text-right">
-                                    <button
-                                        onClick={() => void deleteOne(r._id)}
-                                        disabled={loading}
-                                        className="w-12 h-12 rounded-xl border border-rose-500/20 bg-rose-500/5 flex items-center justify-center text-rose-500 transition-all hover:bg-rose-500 hover:text-white"
-                                        title="Delete"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </button>
+                                    <div className="flex flex-col items-end gap-4">
+                                        <button
+                                            onClick={() => void deleteOne(r._id)}
+                                            disabled={loading}
+                                            className="w-12 h-12 rounded-xl border border-rose-500/20 bg-rose-500/5 flex items-center justify-center text-rose-500 transition-all hover:bg-rose-500 hover:text-white"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         ))}
