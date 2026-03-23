@@ -1,4 +1,4 @@
-import { ShieldAlert, Zap, Target, BookOpen } from 'lucide-react';
+import { Target } from 'lucide-react';
 
 const ProblemCard = ({ problem }: { problem: any }) => {
     return (
@@ -7,9 +7,6 @@ const ProblemCard = ({ problem }: { problem: any }) => {
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-black border border-neutral-800 text-[10px] font-bold text-neutral-400 uppercase tracking-widest group-hover:border-neutral-600 transition-colors">
                     <Target className="w-3 h-3 text-blue-500" />
                     ID: {problem.id}
-                </div>
-                <div className="flex items-center gap-2 group-hover:scale-110 transition-transform">
-                   <DifficultyBadge difficulty={problem.difficulty} />
                 </div>
             </div>
 
@@ -30,27 +27,6 @@ const ProblemCard = ({ problem }: { problem: any }) => {
                 </div>
             </div>
         </div>
-    );
-};
-
-const DifficultyBadge = ({ difficulty }: { difficulty: string }) => {
-    const tones = {
-        Beginner: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-        Intermediate: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-        Advanced: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
-    };
-    
-    const icon = {
-        Beginner: <BookOpen className="w-3.5 h-3.5" />,
-        Intermediate: <Zap className="w-3.5 h-3.5" />,
-        Advanced: <ShieldAlert className="w-3.5 h-3.5" />
-    };
-
-    return (
-        <span className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${tones[difficulty as keyof typeof tones]}`}>
-            {icon[difficulty as keyof typeof icon]}
-            {difficulty}
-        </span>
     );
 };
 

@@ -7,17 +7,15 @@ import { problems, domains } from '../data/problems';
 const ProblemsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDomain, setSelectedDomain] = useState('All Domains');
-    const [selectedDifficulty, setSelectedDifficulty] = useState('All');
 
     const filteredProblems = useMemo(() => {
         return problems.filter(p => {
             const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                  p.description.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesDomain = selectedDomain === 'All Domains' || p.domain === selectedDomain;
-            const matchesDifficulty = selectedDifficulty === 'All' || p.difficulty === selectedDifficulty;
-            return matchesSearch && matchesDomain && matchesDifficulty;
+            return matchesSearch && matchesDomain;
         });
-    }, [searchQuery, selectedDomain, selectedDifficulty]);
+    }, [searchQuery, selectedDomain]);
 
     return (
         <div className="min-h-screen bg-black pt-32 pb-40 px-6 max-w-7xl mx-auto selection:bg-neutral-800">
@@ -50,7 +48,7 @@ const ProblemsPage = () => {
             </div>
 
             {/* Filter Section */}
-            <div className="mb-16 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="mb-16 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="col-span-1 md:col-span-2 relative group">
                     <Search className="w-4 h-4 text-neutral-600 absolute left-4 top-1/2 -translate-y-1/2 group-focus-within:text-white transition-colors" />
                     <input 
@@ -71,17 +69,6 @@ const ProblemsPage = () => {
                     {domains.map(d => (
                         <option key={d} value={d}>{d}</option>
                     ))}
-                </select>
-
-                <select 
-                    value={selectedDifficulty}
-                    onChange={(e) => setSelectedDifficulty(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-neutral-700 transition-all font-medium appearance-none h-[58px]"
-                >
-                    <option value="All">All Levels</option>
-                    <option value="Beginner">Beginner</option>
-                    <option value="Intermediate">Intermediate</option>
-                    <option value="Advanced">Advanced</option>
                 </select>
             </div>
 

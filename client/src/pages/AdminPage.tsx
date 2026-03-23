@@ -87,7 +87,13 @@ export default function AdminPage() {
       setItems(list.items);
       setTotalPages(list.totalPages || 1);
     } catch (e: unknown) {
-      setError(getAxiosMessage(e, 'Failed to load admin data'));
+      const eAxios = e as AxiosError;
+      if (eAxios?.response?.status === 401) {
+        onLogout();
+        setError('Session expired or invalid key. Please log in again.');
+      } else {
+        setError(getAxiosMessage(e, 'Failed to load admin data'));
+      }
       setStats(null);
       setItems([]);
       setTotalPages(1);
