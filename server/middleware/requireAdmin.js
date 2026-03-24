@@ -4,10 +4,11 @@ function requireAdmin(req, res, next) {
     return res.status(500).json({ error: 'ADMIN_API_KEY is not configured on the server' });
   }
 
-  const provided = req.header('x-admin-key');
+  const provided = req.header('x-admin-key') || req.query.key;
   if (!provided || provided !== expected) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+
 
   return next();
 }

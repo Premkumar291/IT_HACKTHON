@@ -8,8 +8,9 @@ import {
   setAdminKey,
   type Registration,
 } from '../services/api';
-import { AlertCircle, Search, Shield, Trash2, RefreshCcw, LogOut, Users, Briefcase, ChevronLeft, ChevronRight, LayoutGrid, Phone, Mail, Check, X } from 'lucide-react';
+import { AlertCircle, Search, Shield, Trash2, RefreshCcw, LogOut, Users, Briefcase, ChevronLeft, ChevronRight, LayoutGrid, Phone, Mail, Check, X, Eye, ExternalLink, FileDown, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Problem } from '../data/problems';
 
 type Stats = { total: number; facultyReviewed: number; guestReviewed: number };
 
@@ -42,8 +43,6 @@ function StatCard({ label, value, icon: Icon, tone }: { label: string; value: nu
   );
 }
 
-
-
 export default function AdminPage() {
   const [adminKeyInput, setAdminKeyInput] = useState(() => getAdminKey());
   const [authed, setAuthed] = useState(() => Boolean(getAdminKey()));
@@ -54,10 +53,19 @@ export default function AdminPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [q, setQ] = useState('');
   const [debouncedQ, setDebouncedQ] = useState('');
+  const [filterBy, setFilterBy] = useState<'faculty_pending' | 'guest_pending' | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scoring, setScoring] = useState<{ id: string; type: 'faculty' | 'guest' } | null>(null);
   const [scoreInput, setScoreInput] = useState('');
+  const [allProblemsData, setAllProblemsData] = useState<Problem[]>([]);
+  const [exporting, setExporting] = useState(false);
+
+  // Lazy load problems for the description mapping
+  useEffect(() => {
+    if (!authed) return;
+    import('../data/problems').then(m => setAllProblemsData(m.problems));
+  }, [authed]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -72,8 +80,9 @@ export default function AdminPage() {
       page,
       limit: 25,
       q: debouncedQ.trim() ? debouncedQ.trim() : undefined,
+      filterBy,
     };
-  }, [page, debouncedQ]);
+  }, [page, debouncedQ, filterBy]);
 
   async function refresh() {
     setLoading(true);
@@ -130,6 +139,42 @@ export default function AdminPage() {
     } catch (e: unknown) {
       setError(getAxiosMessage(e, 'Failed to delete registration'));
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+        const data = await adminListRegistrations({ limit: 1000, filterBy });
+        const items = data.items;
+        
+        const headers = ["ID", "Team Leader", "Email", "Phone", "Year", "Problem Title", "Faculty Score", "Guest Score", "Members"];
+        const rows = items.map(r => [
+            r._id,
+            r.fullName,
+            r.email,
+            r.phone,
+            r.yearOfStudy,
+            r.preferredProblem,
+            r.facultyScore || 0,
+            r.guestScore || 0,
+            r.members?.map(m => `${m.name} (${m.email})`).join('; ')
+        ]);
+
+        const csvContent = [headers, ...rows].map(e => e.map(item => `"${String(item).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `hackathon_registrations_${filterBy || 'all'}_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (e) {
+        setError("Export failed");
+    } finally {
+        setExporting(false);
     }
   };
 
@@ -241,15 +286,42 @@ export default function AdminPage() {
         </div>
 
         <div className="rounded-[40px] border border-neutral-800 bg-neutral-950 shadow-2xl overflow-hidden">
-            <div className="p-10 border-b border-neutral-900 flex flex-col xl:flex-row gap-10 xl:items-center xl:justify-between bg-neutral-900/50">
-                <div className="relative group flex-1 max-w-2xl">
-                    <Search className="w-4 h-4 text-neutral-600 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within:text-white transition-colors" />
-                    <input
-                        value={q}
-                        onChange={(e) => setQ(e.target.value)}
-                        placeholder="Search for teams, emails, or names..."
-                        className="w-full pl-16 pr-8 py-5 rounded-2xl bg-black border border-neutral-800 text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-all font-bold italic h-[64px]"
-                    />
+                <div className="p-10 border-b border-neutral-900 flex flex-col xl:flex-row gap-6 xl:items-center xl:justify-between bg-neutral-900/50">
+                <div className="flex flex-col md:flex-row gap-4 flex-1">
+                    <div className="relative group flex-1">
+                        <Search className="w-4 h-4 text-neutral-600 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within:text-white transition-colors" />
+                        <input
+                            value={q}
+                            onChange={(e) => setQ(e.target.value)}
+                            placeholder="Search for teams, emails, or names..."
+                            className="w-full pl-16 pr-8 py-5 rounded-2xl bg-black border border-neutral-800 text-white placeholder:text-neutral-700 focus:outline-none focus:border-neutral-700 transition-all font-bold italic h-[64px]"
+                        />
+                    </div>
+
+                    <div className="relative group">
+                        <Filter className="w-4 h-4 text-neutral-600 absolute left-6 top-1/2 -translate-y-1/2 group-focus-within:text-white transition-colors" />
+                        <select 
+                            value={filterBy || ''}
+                            onChange={(e) => {
+                                setFilterBy(e.target.value ? (e.target.value as any) : undefined);
+                                setPage(1);
+                            }}
+                            className="pl-14 pr-10 py-5 rounded-2xl bg-black border border-neutral-800 text-white font-bold italic h-[64px] appearance-none focus:outline-none focus:border-neutral-700 transition-all min-w-[200px]"
+                        >
+                            <option value="">All Review Status</option>
+                            <option value="faculty_pending">Faculty Review Pending</option>
+                            <option value="guest_pending">Guest Review Pending</option>
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={handleExport}
+                        disabled={exporting || loading}
+                        className="flex items-center justify-center gap-3 px-8 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[11px] transition-all hover:scale-105 active:scale-95 disabled:opacity-50 h-[64px]"
+                    >
+                        <FileDown className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+                        {exporting ? 'Exporting...' : 'Export Excel'}
+                    </button>
                 </div>
 
                 <div className="flex items-center justify-between xl:justify-end gap-6 text-[10px] font-black uppercase tracking-[0.3em] font-outfit text-neutral-600">
@@ -308,9 +380,47 @@ export default function AdminPage() {
                                         ))}
                                     </div>
                                 </td>
-                                <td className="px-10 py-10 align-top">
-                                    <div className="text-base font-black font-outfit text-white tracking-tight uppercase italic mb-2">{r.preferredProblem}</div>
-                                    <div className="text-neutral-600 text-[9px] font-black uppercase tracking-widest italic">Problem Statement Track</div>
+                                <td className="px-10 py-10 align-top max-w-md">
+                                    <div className="text-base font-black font-outfit text-white tracking-tight uppercase italic mb-4">{r.preferredProblem}</div>
+                                    
+                                    {/* Map the title to the description from our local dataset */}
+                                    {(() => {
+                                        const found = (allProblemsData || []).find(p => p.title === r.preferredProblem);
+                                        return found ? (
+                                            <div className="text-neutral-500 text-[10px] font-medium leading-relaxed mb-6 italic line-clamp-4 hover:line-clamp-none transition-all cursor-help border-l border-neutral-800 pl-4 bg-neutral-900/30 py-2 rounded-r-lg">
+                                                {found.description}
+                                            </div>
+                                        ) : null;
+                                    })()}
+                                    
+                                    {r.pptFile?.fileId ? (
+                                        <div className="flex items-center gap-3">
+                                            <a 
+                                                href={
+                                                    r.pptFile.mimeType === 'application/pdf'
+                                                    ? `${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/files/${r.pptFile.fileId}?key=${getAdminKey()}`
+                                                    : `https://docs.google.com/viewer?url=${encodeURIComponent(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/files/${r.pptFile.fileId}?key=${getAdminKey()}`)}&embedded=true`
+                                                }
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-500 hover:bg-blue-500 hover:text-white transition-all group/ppt"
+                                            >
+                                                <Eye className="w-4 h-4 group-hover/ppt:scale-110 transition-transform" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">Preview</span>
+                                            </a>
+                                            
+                                            <a 
+                                                href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/files/${r.pptFile.fileId}?key=${getAdminKey()}`}
+                                                download
+                                                className="p-1.5 rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-500 hover:bg-neutral-800 hover:text-white transition-all"
+                                                title="Direct Download"
+                                            >
+                                                <ExternalLink className="w-4 h-4" />
+                                            </a>
+                                        </div>
+                                    ) : (
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-neutral-800 italic">No Proposal</div>
+                                    )}
                                 </td>
                                 <td className="px-10 py-10 align-top min-w-[240px]">
                                     <div className="space-y-4">

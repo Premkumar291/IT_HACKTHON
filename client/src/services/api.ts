@@ -72,7 +72,7 @@ export async function adminGetStats() {
     return response.data as { total: number; facultyReviewed: number; guestReviewed: number };
 }
 
-export async function adminListRegistrations(params: { page?: number; limit?: number; q?: string }) {
+export async function adminListRegistrations(params: { page?: number; limit?: number; q?: string; filterBy?: 'faculty_pending' | 'guest_pending' }) {
     const response = await api.get('/admin/registrations', { params, headers: adminHeaders() });
     return response.data as {
         items: Registration[];

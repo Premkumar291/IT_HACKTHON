@@ -21,11 +21,18 @@ exports.listRegistrations = async (req, res) => {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
     const limit = Math.min(Math.max(parseInt(req.query.limit || '25', 10), 1), 200);
     const q = (req.query.q || '').toString().trim();
+    const filterBy = req.query.filterBy; // 'faculty_pending' | 'guest_pending'
 
     const filter = {};
 
     if (q) {
       filter.$text = { $search: q };
+    }
+
+    if (filterBy === 'faculty_pending') {
+      filter.facultyScore = { $eq: 0 };
+    } else if (filterBy === 'guest_pending') {
+      filter.guestScore = { $eq: 0 };
     }
 
     const [items, total] = await Promise.all([

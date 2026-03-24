@@ -1,10 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import ProblemCard from '../components/ProblemCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Database, Blocks, Loader2 } from 'lucide-react';
+import { Search, Database, Blocks, Loader2, X } from 'lucide-react';
 import type { Problem } from '../data/problems';
-
-const ITEMS_PER_PAGE = 12;
 
 const ProblemsPage = () => {
     const [allProblems, setAllProblems] = useState<Problem[]>([]);
@@ -12,7 +10,7 @@ const ProblemsPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDomain, setSelectedDomain] = useState('All Domains');
-    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+    const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
 
     // Lazy load the huge problems data to make the page component chunk smaller and load instantly
     useEffect(() => {
@@ -34,14 +32,15 @@ const ProblemsPage = () => {
         });
     }, [allProblems, searchQuery, selectedDomain]);
 
-    const visibleProblems = useMemo(() => {
-        return filteredProblems.slice(0, visibleCount);
-    }, [filteredProblems, visibleCount]);
-
+    // Prevent body scroll when modal is open
     useEffect(() => {
-        // Reset visible count when search or domain changes
-        setVisibleCount(ITEMS_PER_PAGE);
-    }, [searchQuery, selectedDomain]);
+        if (selectedProblem) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => { document.body.style.overflow = 'unset'; };
+    }, [selectedProblem]);
 
     return (
         <div className="min-h-screen bg-black pt-32 pb-40 px-6 max-w-7xl mx-auto selection:bg-neutral-800">
@@ -68,7 +67,7 @@ const ProblemsPage = () => {
                         transition={{ delay: 0.1 }}
                         className="text-neutral-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl"
                     >
-                        Browse through curated problem statements across multiple domains. Choose the one that fuels your creative vision.
+                        Click on any track to view full details. Browse through our curated database of {allProblems.length} problem statements.
                     </motion.p>
                 </div>
             </div>
@@ -101,41 +100,23 @@ const ProblemsPage = () => {
             {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-40">
                     <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                    <p className="text-neutral-500 font-medium">Loading high-performance problem dataset...</p>
+                    <p className="text-neutral-500 font-medium italic uppercase tracking-widest text-[10px]">Synchronizing Problem Database...</p>
                 </div>
             ) : (
                 <>
                     {/* Problem Grid */}
-                    <motion.div 
-                        layout
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-                    >
-                        <AnimatePresence>
-                            {visibleProblems.map((p) => (
-                                <motion.div
-                                    key={p.id}
-                                    initial={{ opacity: 0, scale: 0.98 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.98 }}
-                                    transition={{ duration: 0.2 }}
-                                >
-                                    <ProblemCard problem={p} />
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-                    </motion.div>
-
-                    {filteredProblems.length > visibleCount && (
-                        <div className="mt-24 flex justify-center">
-                            <button 
-                                onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
-                                className="group relative px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-all active:scale-95"
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredProblems.map((p) => (
+                            <motion.div
+                                layout
+                                key={p.id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
                             >
-                                <span className="relative z-10 font-outfit">Reveal More tracks</span>
-                                <div className="absolute inset-x-0 -bottom-2 h-4 bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            </button>
-                        </div>
-                    )}
+                                <ProblemCard problem={p} onClick={() => setSelectedProblem(p)} />
+                            </motion.div>
+                        ))}
+                    </div>
 
                     {filteredProblems.length === 0 && (
                         <div className="text-center py-40 border border-dashed border-neutral-800 rounded-3xl bg-neutral-950/50">
@@ -146,6 +127,78 @@ const ProblemsPage = () => {
                     )}
                 </>
             )}
+
+            {/* Premium Modal for Problem Detail */}
+            <AnimatePresence>
+                {selectedProblem && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedProblem(null)}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+                        />
+                        
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="relative w-full max-w-4xl bg-neutral-900 border border-neutral-800 rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                        >
+                            <div className="p-8 md:p-12 overflow-y-auto">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-black border border-neutral-800 text-xs font-black text-blue-500 uppercase tracking-[0.2em] italic">
+                                        ID: {selectedProblem.id}
+                                    </div>
+                                    <button 
+                                        onClick={() => setSelectedProblem(null)}
+                                        className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-white hover:bg-neutral-700 transition-all hover:rotate-90"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <motion.h2 
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    className="text-3xl md:text-5xl font-black text-white mb-8 leading-tight tracking-tight font-outfit italic uppercase"
+                                >
+                                    {selectedProblem.title}
+                                </motion.h2>
+
+                                <div className="space-y-8">
+                                    <div className="p-8 rounded-2xl bg-black/50 border border-neutral-800">
+                                        <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-6 border-b border-neutral-800 pb-2 italic">Problem Statement</h4>
+                                        <p className="text-neutral-300 text-lg md:text-xl font-medium leading-relaxed whitespace-pre-wrap">
+                                            {selectedProblem.description}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex flex-col md:flex-row gap-8">
+                                        <div className="flex-1 p-6 rounded-2xl bg-neutral-800/30 border border-neutral-800">
+                                            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-4 italic">Domain Track</h4>
+                                            <div className="text-white font-bold text-lg italic uppercase">{selectedProblem.domain}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-8 bg-neutral-800/50 border-t border-neutral-800 flex items-center justify-between">
+                                <div className="text-neutral-500 font-bold text-[10px] uppercase tracking-widest italic">
+                                    Hackathon 2026 • Official Track
+                                </div>
+                                <button 
+                                    onClick={() => setSelectedProblem(null)}
+                                    className="px-8 py-3 bg-white text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 transition-all active:scale-95"
+                                >
+                                    Close Details
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
