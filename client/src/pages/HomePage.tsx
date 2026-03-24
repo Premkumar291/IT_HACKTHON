@@ -19,7 +19,7 @@ const HomePage = () => {
                         className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-sm font-medium text-neutral-400 mb-8"
                     >
                         <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                        <span>IT_27 2026 Registration Open</span>
+                        <span>HACK THE LIMITZ 2026 Registration Open</span>
                     </motion.div>
 
                     <motion.h1

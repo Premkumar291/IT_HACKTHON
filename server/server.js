@@ -13,10 +13,36 @@ const PORT = process.env.PORT || 5000;
 
 // Security settings
 app.use(helmet());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://it-hackthon.vercel.app',
+  'https://it-hackthon-qfvp.vercel.app',
+  'https://it-hackthon-admin.vercel.app'
+];
+
+if (process.env.CLIENT_ORIGIN) {
+  allowedOrigins.push(...process.env.CLIENT_ORIGIN.split(',').map(o => o.trim()));
+}
+
+
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key'],
+  credentials: true
 }));
+
+
 app.use(express.json({ limit: '10mb' }));
 
 // Rate limiting to prevent brute-force

@@ -1,20 +1,46 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import ProblemCard from '../components/ProblemCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Database, Blocks } from 'lucide-react';
-import { problems, domains } from '../data/problems';
+import { Search, Database, Blocks, Loader2 } from 'lucide-react';
+import type { Problem } from '../data/problems';
+
+const ITEMS_PER_PAGE = 12;
 
 const ProblemsPage = () => {
+    const [allProblems, setAllProblems] = useState<Problem[]>([]);
+    const [allDomains, setAllDomains] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDomain, setSelectedDomain] = useState('All Domains');
+    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+    // Lazy load the huge problems data to make the page component chunk smaller and load instantly
+    useEffect(() => {
+        const loadData = async () => {
+            const data = await import('../data/problems');
+            setAllProblems(data.problems);
+            setAllDomains(data.domains);
+            setIsLoading(false);
+        };
+        loadData();
+    }, []);
 
     const filteredProblems = useMemo(() => {
-        return problems.filter(p => {
+        return allProblems.filter(p => {
             const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                  p.description.toLowerCase().includes(searchQuery.toLowerCase());
             const matchesDomain = selectedDomain === 'All Domains' || p.domain === selectedDomain;
             return matchesSearch && matchesDomain;
         });
+    }, [allProblems, searchQuery, selectedDomain]);
+
+    const visibleProblems = useMemo(() => {
+        return filteredProblems.slice(0, visibleCount);
+    }, [filteredProblems, visibleCount]);
+
+    useEffect(() => {
+        // Reset visible count when search or domain changes
+        setVisibleCount(ITEMS_PER_PAGE);
     }, [searchQuery, selectedDomain]);
 
     return (
@@ -66,38 +92,59 @@ const ProblemsPage = () => {
                     className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-neutral-700 transition-all font-medium appearance-none h-[58px]"
                 >
                     <option value="All Domains">All Domains</option>
-                    {domains.map(d => (
+                    {allDomains.map(d => (
                         <option key={d} value={d}>{d}</option>
                     ))}
                 </select>
             </div>
 
-            {/* Problem Grid */}
-            <motion.div 
-                layout
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            >
-                <AnimatePresence>
-                    {filteredProblems.map((p) => (
-                        <motion.div
-                            key={p.id}
-                            initial={{ opacity: 0, scale: 0.98 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.98 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <ProblemCard problem={p} />
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
-            </motion.div>
-
-            {filteredProblems.length === 0 && (
-                <div className="text-center py-40 border border-dashed border-neutral-800 rounded-3xl bg-neutral-950/50">
-                    <Database className="w-12 h-12 text-neutral-800 mx-auto mb-6" />
-                    <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight font-outfit">No results found</h3>
-                    <p className="text-neutral-600 font-medium">Try adjusting your filters or search keywords.</p>
+            {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-40">
+                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                    <p className="text-neutral-500 font-medium">Loading high-performance problem dataset...</p>
                 </div>
+            ) : (
+                <>
+                    {/* Problem Grid */}
+                    <motion.div 
+                        layout
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                    >
+                        <AnimatePresence>
+                            {visibleProblems.map((p) => (
+                                <motion.div
+                                    key={p.id}
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    <ProblemCard problem={p} />
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </motion.div>
+
+                    {filteredProblems.length > visibleCount && (
+                        <div className="mt-24 flex justify-center">
+                            <button 
+                                onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                                className="group relative px-8 py-4 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-full hover:scale-105 transition-all active:scale-95"
+                            >
+                                <span className="relative z-10 font-outfit">Reveal More tracks</span>
+                                <div className="absolute inset-x-0 -bottom-2 h-4 bg-blue-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                            </button>
+                        </div>
+                    )}
+
+                    {filteredProblems.length === 0 && (
+                        <div className="text-center py-40 border border-dashed border-neutral-800 rounded-3xl bg-neutral-950/50">
+                            <Database className="w-12 h-12 text-neutral-800 mx-auto mb-6" />
+                            <h3 className="text-xl font-bold text-white mb-2 uppercase tracking-tight font-outfit">No results found</h3>
+                            <p className="text-neutral-600 font-medium">Try adjusting your filters or search keywords.</p>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
