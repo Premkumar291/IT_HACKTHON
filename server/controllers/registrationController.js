@@ -57,8 +57,8 @@ exports.registerTeam = async (req, res) => {
         if (!Array.isArray(parsedMembers)) {
             return res.status(400).json({ error: 'Invalid members format' });
         }
-        if (parsedMembers.length > 4) {
-            return res.status(400).json({ error: 'Team members exceed the maximum limit of 4 members' });
+        if (parsedMembers.length > 3) {
+            return res.status(400).json({ error: 'Team members exceed the maximum limit of 3 additional members' });
         }
         for (const m of parsedMembers) {
             if (!m?.name || !m?.email || !m?.phone) {

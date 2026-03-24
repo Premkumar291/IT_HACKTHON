@@ -113,7 +113,7 @@ const RegisterFormPage = () => {
 
                 {/* Team Members */}
                 <div className="space-y-6">
-                    <h3 className="text-xl font-bold text-white border-b border-neutral-800 pb-2 font-outfit uppercase tracking-tight">Team Members (Max 4)</h3>
+                    <h3 className="text-xl font-bold text-white border-b border-neutral-800 pb-2 font-outfit uppercase tracking-tight">Team Members (Max 3)</h3>
                     <div className="space-y-4">
                         {fields.map((field, index) => (
                             <motion.div key={field.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="p-6 bg-neutral-900 border border-neutral-800 rounded-xl relative">
@@ -137,7 +137,7 @@ const RegisterFormPage = () => {
                                 </div>
                             </motion.div>
                         ))}
-                        {fields.length < 4 && (
+                        {fields.length < 3 && (
                             <button type="button" onClick={() => append({ name: '', email: '', phone: '' })} className="w-full py-4 border-2 border-dashed border-neutral-800 rounded-xl text-neutral-500 hover:border-neutral-700 hover:text-white transition-all flex items-center justify-center gap-2 font-bold uppercase tracking-widest text-xs">
                                 <Plus className="w-4 h-4" /> Add Team Member
                             </button>
