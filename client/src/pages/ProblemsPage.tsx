@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import ProblemCard from '../components/ProblemCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Database, Blocks, Loader2, X } from 'lucide-react';
+import { Search, Database, Blocks, Loader2, X, RefreshCw, Sparkles } from 'lucide-react';
 import type { Problem } from '../data/problems';
 
 const ProblemsPage = () => {
@@ -11,6 +11,17 @@ const ProblemsPage = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedDomain, setSelectedDomain] = useState('All Domains');
     const [selectedProblem, setSelectedProblem] = useState<Problem | null>(null);
+    const [quickPicks, setQuickPicks] = useState<Problem[]>([]);
+    const [shuffleKey, setShuffleKey] = useState(0);
+    const [isSpinning, setIsSpinning] = useState(false);
+
+    const shufflePicks = useCallback((problems: Problem[]) => {
+        const shuffled = [...problems].sort(() => Math.random() - 0.5);
+        setQuickPicks(shuffled.slice(0, 3));
+        setShuffleKey(prev => prev + 1);
+        setIsSpinning(true);
+        setTimeout(() => setIsSpinning(false), 600);
+    }, []);
 
     // Lazy load the huge problems data to make the page component chunk smaller and load instantly
     useEffect(() => {
@@ -18,6 +29,7 @@ const ProblemsPage = () => {
             const data = await import('../data/problems');
             setAllProblems(data.problems);
             setAllDomains(data.domains);
+            shufflePicks(data.problems);
             setIsLoading(false);
         };
         loadData();
@@ -71,6 +83,50 @@ const ProblemsPage = () => {
                     </motion.p>
                 </div>
             </div>
+
+            {/* Quick Picks Section */}
+            {!isLoading && quickPicks.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mb-20"
+                >
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-400 uppercase tracking-widest">
+                                <Sparkles className="w-3 h-3" />
+                                Quick Picks
+                            </div>
+                            <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter font-outfit">
+                                Not sure where to start?
+                            </h2>
+                        </div>
+                        <button
+                            onClick={() => shufflePicks(allProblems)}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700 transition-all text-xs font-bold uppercase tracking-widest group"
+                        >
+                            <RefreshCw className={`w-3.5 h-3.5 transition-transform ${isSpinning ? 'animate-spin' : 'group-hover:rotate-180'}`} />
+                            <span className="hidden sm:inline">Shuffle</span>
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <AnimatePresence mode="wait">
+                            {quickPicks.map((p) => (
+                                <motion.div
+                                    key={`${shuffleKey}-${p.id}`}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.3 }}
+                                >
+                                    <ProblemCard problem={p} onClick={() => setSelectedProblem(p)} />
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
+                    </div>
+                </motion.div>
+            )}
 
             {/* Filter Section */}
             <div className="mb-16 grid grid-cols-1 md:grid-cols-3 gap-4">

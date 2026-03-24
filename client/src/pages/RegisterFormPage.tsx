@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Loader2, AlertCircle, Plus, Trash2, UploadCloud, FileText } from 'lucide-react';
+import { CheckCircle2, Loader2, AlertCircle, Plus, Trash2, UploadCloud, FileText, BookOpen, Users, Calendar, FileWarning } from 'lucide-react';
 import { registerTeam } from '../services/api';
 import { problems, domains } from '../data/problems';
 
@@ -78,8 +78,95 @@ const RegisterFormPage = () => {
         <div className="min-h-screen bg-black pt-32 pb-40 px-6 max-w-3xl mx-auto">
             <div className="mb-12">
                 <h1 className="text-4xl font-bold text-white mb-2 font-outfit">Registration Form</h1>
-                <p className="text-neutral-500 font-medium italic">Complete the form below to register your team.</p>
+                <p className="text-neutral-500 font-medium italic">Read the guidelines below, then complete the form to register your team.</p>
             </div>
+
+            {/* Event Guidelines */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-12 space-y-6"
+            >
+                {/* Guidelines */}
+                <div className="p-6 md:p-8 rounded-2xl bg-neutral-900 border border-neutral-800">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+                            <BookOpen className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <h2 className="text-lg font-black text-white uppercase tracking-tight font-outfit">Guidelines</h2>
+                    </div>
+                    <ul className="space-y-3 text-sm text-neutral-300 font-medium">
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Build a working prototype (Web / App / AI / IoT / Software)</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Projects must solve a real-world problem</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>You can use any technology stack</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Pre-built templates allowed, but core logic must be original</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Teams must explain idea, working, and impact clearly</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Code submission is mandatory (GitHub / Zip)</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>Demo presentation is required for evaluation</li>
+                        <li className="flex items-start gap-2"><span className="text-blue-500 mt-0.5">&#8226;</span>This event is for 2nd and 3rd year IT Department students</li>
+                        <li className="flex items-start gap-2"><span className="text-rose-400 mt-0.5">&#8226;</span><span className="text-rose-300">Event will be conducted inside IT Department. Leaving the premises or absence during development hours will result in disqualification</span></li>
+                    </ul>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Team Rules */}
+                    <div className="p-6 rounded-2xl bg-neutral-900 border border-neutral-800">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                <Users className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <h2 className="text-lg font-black text-white uppercase tracking-tight font-outfit">Team Rules</h2>
+                        </div>
+                        <ul className="space-y-3 text-sm text-neutral-300 font-medium">
+                            <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">&#8226;</span>Team size: exactly 4 members</li>
+                            <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">&#8226;</span>Cross-year teams are not allowed</li>
+                            <li className="flex items-start gap-2"><span className="text-amber-500 mt-0.5">&#8226;</span>Individual participation is not allowed</li>
+                        </ul>
+                    </div>
+
+                    {/* Event Flow */}
+                    <div className="p-6 rounded-2xl bg-neutral-900 border border-neutral-800">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <h2 className="text-lg font-black text-white uppercase tracking-tight font-outfit">Event Flow</h2>
+                        </div>
+                        <div className="space-y-4 text-sm font-medium">
+                            <div>
+                                <div className="text-emerald-400 font-bold mb-1">Day 1 (27-03-2025) - Offline</div>
+                                <ul className="text-neutral-300 space-y-1 ml-1">
+                                    <li>&#8226; Start Building</li>
+                                    <li>&#8226; Mentor support & guides provided</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <div className="text-emerald-400 font-bold mb-1">Day 2 (28-03-2025) - Online</div>
+                                <ul className="text-neutral-300 space-y-1 ml-1">
+                                    <li>&#8226; Final Presentation</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* PPT Requirement Callout */}
+                <div className="p-5 rounded-2xl bg-rose-500/5 border border-rose-500/20 flex items-start gap-4">
+                    <FileWarning className="w-5 h-5 text-rose-400 mt-0.5 shrink-0" />
+                    <div className="text-sm font-medium">
+                        <span className="text-rose-300 font-bold">PPT Submission Note:</span>
+                        <span className="text-neutral-400"> Your presentation must not exceed 4 slides. It should clearly cover your </span>
+                        <span className="text-white">Idea</span>
+                        <span className="text-neutral-400">, </span>
+                        <span className="text-white">How it works</span>
+                        <span className="text-neutral-400">, </span>
+                        <span className="text-white">Tech stack</span>
+                        <span className="text-neutral-400">, and </span>
+                        <span className="text-white">Expected impact</span>
+                        <span className="text-neutral-400">.</span>
+                    </div>
+                </div>
+            </motion.div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-10 group">
                 {/* Personal Info */}
@@ -174,7 +261,7 @@ const RegisterFormPage = () => {
                     </InputBox>
 
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest ml-1">Project Presentation (PPT/PPTX)</label>
+                        <label className="text-xs font-bold text-neutral-500 uppercase tracking-widest ml-1">Project Presentation (PPT/PPTX - Max 4 Slides)</label>
                         <label className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-xl cursor-pointer transition-all ${errors.pptFile ? 'border-rose-500/30' : 'border-neutral-800 hover:border-neutral-700'}`}>
                             <div className="flex flex-col items-center justify-center text-center">
                                 {pptFile?.[0] ? <FileText className="w-8 h-8 text-white mb-2" /> : <UploadCloud className="w-8 h-8 text-neutral-600 mb-2" />}
